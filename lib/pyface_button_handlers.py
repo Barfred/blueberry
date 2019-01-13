@@ -21,13 +21,13 @@ def button0(event, bluos, lcd):
 
 
 def button1(event, bluos, lcd):
-    lcd.popup("Previous track..")
+    lcd.lcdpopup("Previous track..")
     bluos.back()
     logging.info("Skipping to previous track")
 
 
 def button2(event, bluos, lcd):
-    lcd.popup("Next track..")
+    lcd.lcdpopup("Next track..")
     bluos.skip()
     logging.info("Skipping to next track")
 
