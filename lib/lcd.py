@@ -1,13 +1,15 @@
 import threading
 from time import sleep
 
+LCD_SCREEN_WIDTH = 16
+
 class Lcd:
     lock = threading.Lock()
 
     def __init__(self, cad):
         """
         Initialize the LCD of the PiFace Control and Display unit.
-        A instance of pifacecad.PiFaceCAD must be given as argument.
+        An instance of pifacecad.PiFaceCAD must be given as argument.
         """
 
         # Clear and initialize the LCD if we can get a lock.
@@ -20,9 +22,12 @@ class Lcd:
 
     def write(self, text, row=0, col=0, viewport=0):
         with Lcd.lock:
-            self.cad.lcd.set_cursor(col, row)
+            self.cad.lcd.set_cursor(0, row)
             self.cad.lcd.viewport_corner = 0
-            self.cad.lcd.write(text[:16-col])
+            # Make the text exactly same width as the LCD screen
+            # and pre-pad and post-pad as needed
+            text = " "*col + "{:<{width}.{width}}".format(text, width=LCD_SCREEN_WIDTH-col)
+            self.cad.lcd.write(text)
 
     def popup(self, text, row=0, col=0, viewport=0, duration=2):
         """
@@ -36,22 +41,22 @@ class Lcd:
         :return:
         """
         with Lcd.lock:
-            self.cad.lcd.set_cursor(17+col, row)
+            self.cad.lcd.set_cursor(LCD_SCREEN_WIDTH+1+col, row)
             self.cad.lcd.write(text)
-            self.cad.lcd.viewport_corner = 17
+            self.cad.lcd.viewport_corner = LCD_SCREEN_WIDTH+1
             sleep(duration)
-            self.cad.lcd.set_cursor(17+col, row)
+            self.cad.lcd.set_cursor(LCD_SCREEN_WIDTH+1+col, row)
             self.cad.lcd.write(" " * len(text))
             self.cad.lcd.viewport_corner = 0
 
 
     def greeting(self, text):
         with Lcd.lock:
-            self.cad.lcd.set_cursor(16, 0)
+            self.cad.lcd.set_cursor(LCD_SCREEN_WIDTH, 0)
             self.cad.lcd.write(text)
             for i in range(16):
                 self.cad.lcd.move_left()
                 sleep(0.1)
             sleep(0.5)
-            self.cad.lcd.set_cursor(16, 0)
+            self.cad.lcd.set_cursor(LCD_SCREEN_WIDTH, 0)
             self.cad.lcd.write(" "*len(text))
