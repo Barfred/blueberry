@@ -1,31 +1,31 @@
 import logging
 
 
-def handleTitle1(title, lcd):
+def handleTitle1(title, cad):
     logging.debug("Display title1 on second row: {}".format(title))
-    lcd.lcdwrite(title, row=1)
+    cad.lcdwrite(title, row=1)
 
 
-def handleTitle2(title, lcd):
+def handleTitle2(title, cad):
     logging.debug("Display title1 on first row: {}".format(title))
-    lcd.lcdwrite(title, row=0)
+    cad.lcdwrite(title, row=0)
 
 
-def handleVolume(volume, lcd):
+def handleVolume(volume, cad):
     logging.debug("Popup display volume on first row: {}".format(volume))
     text = "Volume: {:2}%".format(volume)
-    lcd.lcdpopup(text)
+    cad.lcdpopup(text)
 
 
-def handleStreamState(state, lcd):
+def handleStreamState(state, cad):
     if state == "connecting":
         logging.debug("State 'connecting'. Skipping status popup")
         return
     state = state.capitalize()
     logging.debug("Popup display state on second row: {}".format(state))
     text = "[ {} ]".format(state)
-    lcd.lcdpopup(text, row=1)
+    cad.lcdpopup(text, row=1)
 
 
-def handleSecondsInTrack(sec, lcd):
+def handleSecondsInTrack(sec, cad):
     logging.debug("Seconds: {}".format(sec))
