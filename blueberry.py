@@ -25,8 +25,8 @@ logging.debug("State machine state: {}".format(cad.getstate()))
 cad.lcdgreeting("Ready as a PI!")
 
 # Prepare handlers for bluos events, e.g. title and volume changes
-handleTitle1 = lambda title: lib.bluos_handlers.handleTitle1(title, cad=cad)
-handleTitle2 = lambda title: lib.bluos_handlers.handleTitle2(title, cad=cad)
+handleTitle1 = lambda title: lib.bluos_handlers.handleTitle1(cad=cad, title=title)
+handleTitle2 = lambda title: lib.bluos_handlers.handleTitle2(cad=cad, title=title)
 handleVolume = lambda volume: lib.bluos_handlers.handleVolume(volume, cad=cad)
 handleSecondsInTrack = lambda seconds: lib.bluos_handlers.handleSecondsInTrack(seconds, cad=cad)
 handleStreamState = lambda state: lib.bluos_handlers.handleStreamState(state, cad=cad)

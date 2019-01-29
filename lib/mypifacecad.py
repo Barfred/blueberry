@@ -6,7 +6,7 @@ import logging
 from time import sleep
 from pifacecad import PiFaceCAD
 from lib.uistatemachine import UIStateMachine
-from collections import OrderedDict
+
 
 LCD_SCREEN_WIDTH = 16
 ARROW_BITMAP = [
@@ -31,6 +31,8 @@ class MyPiFaceCAD(PiFaceCAD):
 
         self.state = UIStateMachine()
         self.menu = None  # will be initialized later
+        self.title1 = "No title"
+        self.title2 = "No title"
 
         # Clear and initialize the LCD if we can get a lock.
         with MyPiFaceCAD.lcdlock:
@@ -48,9 +50,35 @@ class MyPiFaceCAD(PiFaceCAD):
             text = " " * col + "{:<{width}.{width}}".format(text, width=LCD_SCREEN_WIDTH - col)
             self.lcd.write(text)
 
+    def updatetitles(self, title1=None, title2=None):
+        """
+        Update player screen with title1 and title2. If one or both titles
+        are given as arguments, then it's stored on the object instance for later.
+        If one or both titles are not given as arguments, the stored values
+        are used instead.
+        """
+        if title1:
+            self.title1 = title1
+        if title2:
+            self.title2 = title2
+
+        if self.getstate() == 'player':
+            logging.debug("Display player screen \"{}\"/\"{}\"".format(self.title2, self.title1))
+            self.lcdwrite(self.title1, row=1)
+            self.lcdwrite(self.title2, row=0)
+
+
     def lcdwritemenu(self):
+        """
+        Write menu items on the LCD and highlight the selected item.
+        A blank line is written if there is no menu item to write.
+        :return:
+        """
         for i in range(2):
-            text = self.menu.menuitems[self.menu.cursoritem+i]['@text']
+            if len(self.menu.menuitems) > self.menu.cursoritem+i:
+                text = self.menu.menuitems[self.menu.cursoritem+i]['@text']
+            else:
+                text = ""
             if self.menu.highlightitem == self.menu.cursoritem+i:
                 text = "> " + text
             else:
@@ -58,7 +86,7 @@ class MyPiFaceCAD(PiFaceCAD):
             logging.debug("lcdwritemenu text = {}".format(text))
             self.lcdwrite(text, row=i)
 
-    def lcdpopup(self, text, row=0, col=0, viewport=0, duration=2):
+    def lcdpopup(self, text, row=0, col=0, viewport=0, duration=1.0):
         """
         Show a message for a limited time duration and then restore LCD content.
 
@@ -92,11 +120,17 @@ class MyPiFaceCAD(PiFaceCAD):
     def getstate(self):
         return self.state.current_state_value
 
+
     def nextstate(self):
         # The menu state graph is just a simple circle with no branches.
         # Therefore there is only one allowed transition from any state.
         # Pick the first (and only) allowed transition and call that:
         self.state.allowed_transitions[0]()
+
+    def populatemenu(self, menulist):
+        # todo: should we check if self.menu already is a Menu class object
+        # and if so, delete it first?
+        self.menu = Menu(menulist)
 
 
 class Menu():
@@ -114,19 +148,23 @@ class Menu():
         self.menuitems = menuitems
 
     def highlightnext(self):
-        if self.highlightitem < len(self.menuitems):
+        if self.highlightitem < len(self.menuitems)-1:
             self.highlightitem += 1
-        if not (self.cursoritem <= self.highlightitem < self.cursoritem+1):
-            # The highlighted item is outside the view. Adjust cursor to
-            # make the view include the highlighted item.
+        if not self.highlightisvisible():
             self.cursoritem = self.highlightitem
         logging.debug("Menu highlightnext: highlightitem={}, cursoritem={}".format(self.highlightitem, self.cursoritem))
 
     def highlightprevious(self):
         if self.highlightitem > 0:
             self.highlightitem -= 1
-        if not (self.cursoritem <= self.highlightitem < self.cursoritem+1):
-            # The highlighted item is outside the view. Adjust cursor to
-            # make the view include the highlighted item.
+        if not self.highlightisvisible():
             self.cursoritem = self.highlightitem
         logging.debug("Menu highlightnext: highlightitem={}, cursoritem={}".format(self.highlightitem, self.cursoritem))
+
+    def highlightisvisible(self):
+        if self.highlightitem in (self.cursoritem, self.cursoritem+1):
+            logging.debug("highlightisvisible: {}, cursoritem: {}, return True".format(self.highlightitem, self.cursoritem))
+            return True
+        else:
+            logging.debug("highlightisvisible: {}, cursoritem: {}, return False".format(self.highlightitem, self.cursoritem))
+            return False

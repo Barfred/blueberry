@@ -1,11 +1,13 @@
 from statemachine import StateMachine, State
 
-# TODO: need a call back for showpresetradioselections to harvest radiostations!
+
 class UIStateMachine(StateMachine):
     player = State('Player', initial=True)
     presetradioselect = State('PresetRadioSelect')
+    playlistselect = State('PlaylistSelect')
 
     showpresetradioselections = player.to(presetradioselect)
     showplayer = presetradioselect.to(player)
+    showplayerfromplaylist = playlistselect.to(player)
 
 

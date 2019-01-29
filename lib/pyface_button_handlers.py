@@ -1,6 +1,6 @@
 import config.settings
 import logging
-from lib.mypifacecad import Menu
+
 
 def button_handler(event, bluos, cad):
     handlers = {
@@ -19,14 +19,14 @@ def button_handler(event, bluos, cad):
 
 def button0(event, bluos, cad):
     # This button cycles through UI states
-    logging.debug("You pressed: {}".format(str(event.pin_num)))
     cad.nextstate()
     logging.debug("UI State is now: {}".format(cad.getstate()))
     if cad.getstate() == 'player':
-        # TODO: refresh lcd with title1 and title2 - how??
-        logging.debug("TODO: refresh LCD with player content")
+        cad.updatetitles()
     elif cad.getstate() == 'presetradioselect':
-        cad.menu = Menu(bluos.getRadioPresets()['item'])
+        cad.lcdpopup("Menu: Radio")
+        cad.populatemenu(bluos.getRadioPresets()['item'])
+        # TODO: handle case where menu is empty
         logging.debug("got radio stations")
         cad.lcdwritemenu()
         logging.debug("menu written to lcd")
@@ -53,7 +53,17 @@ def button2(event, bluos, cad):
 
 
 def button3(event, bluos, cad):
-    logging.debug("You pressed: {}".format(str(event.pin_num)))
+    state = cad.getstate()
+    if state == 'player':
+#        cad.lcdpopup("Next track..")
+#        bluos.skip()
+        pass
+    elif state == 'presetradioselect':
+        # Play the radiostation
+        url = cad.menu.menuitems[cad.menu.highlightitem]['@URL']
+        logging.debug("playing radiostation {} from url {}".format(cad.menu.menuitems[cad.menu.highlightitem]['@text'], url))
+        bluos.play(url=url)
+        cad.state.showplayer()
 
 
 def button4(event, bluos, cad):

@@ -1,14 +1,14 @@
 import logging
 
 
-def handleTitle1(title, cad):
-    logging.debug("Display title1 on second row: {}".format(title))
-    cad.lcdwrite(title, row=1)
+def handleTitle1(cad, title=None):
+    logging.debug("handleTitle1 callback called with title {}".format(title))
+    cad.updatetitles(title1=title)
 
 
-def handleTitle2(title, cad):
-    logging.debug("Display title1 on first row: {}".format(title))
-    cad.lcdwrite(title, row=0)
+def handleTitle2(cad, title=None):
+    logging.debug("handleTitle2 callback called with title {}".format(title))
+    cad.updatetitles(title2=title)
 
 
 def handleVolume(volume, cad):
