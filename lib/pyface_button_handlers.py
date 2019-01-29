@@ -19,17 +19,31 @@ def button_handler(event, bluos, cad):
 
 def button0(event, bluos, cad):
     # This button cycles through UI states
-    cad.nextstate()
-    logging.debug("UI State is now: {}".format(cad.getstate()))
-    if cad.getstate() == 'player':
+    # TODO: ignore duplicate events in very short time span on same switch due to poor switch HW
+    cad.nextmenustate()
+    state = cad.getstate()
+    logging.debug("UI State is now: {}".format(state))
+
+    if state == 'player':
         cad.updatetitles()
-    elif cad.getstate() == 'presetradioselect':
+
+    elif state == 'radioselect':
         cad.lcdpopup("Menu: Radio")
         cad.populatemenu(bluos.getRadioPresets()['item'])
         # TODO: handle case where menu is empty
-        logging.debug("got radio stations")
         cad.lcdwritemenu()
-        logging.debug("menu written to lcd")
+
+    elif state == 'playlistselect':
+        cad.lcdpopup("Menu: Playlists")
+        cad.populatemenu(bluos.getPlaylists()['name'])
+         # TODO: handle case where menu is empty
+        cad.lcdwritemenu()
+
+    elif state == 'queueselect':
+        cad.lcdpopup("Menu: Queue")
+        cad.populatemenu(bluos.getQueue()['song'])
+        # TODO: handle case where menu is empty
+        cad.lcdwritemenu()
 
 
 def button1(event, bluos, cad):
@@ -37,33 +51,47 @@ def button1(event, bluos, cad):
     if state == 'player':
         cad.lcdpopup("Previous track..")
         bluos.back()
-    elif state == 'presetradioselect':
+    elif state in ('presetradioselect', 'playlistselect', 'queueselect'):
         cad.menu.highlightprevious()
         cad.lcdwritemenu()
 
 
 def button2(event, bluos, cad):
     state = cad.getstate()
+
     if state == 'player':
         cad.lcdpopup("Next track..")
         bluos.skip()
-    elif state == 'presetradioselect':
+
+    elif state in ('presetradioselect', 'playlistselect', 'queueselect'):
         cad.menu.highlightnext()
         cad.lcdwritemenu()
 
 
 def button3(event, bluos, cad):
     state = cad.getstate()
+
     if state == 'player':
-#        cad.lcdpopup("Next track..")
-#        bluos.skip()
-        pass
+        cad.lcdpopup("Next track..")
+        bluos.skip()
+
     elif state == 'presetradioselect':
         # Play the radiostation
         url = cad.menu.menuitems[cad.menu.highlightitem]['@URL']
         logging.debug("playing radiostation {} from url {}".format(cad.menu.menuitems[cad.menu.highlightitem]['@text'], url))
         bluos.play(url=url)
-        cad.state.showplayer()
+        cad.state.playradio()
+
+    elif state == 'playlistselect':
+        name = cad.menu.menuitems[cad.menu.highlightitem]['@text']
+        logging.debug("playing playlist {}".format(name))
+        bluos.queuePlaylist(name)
+        cad.state.playplaylist()
+
+    elif state == 'queueselect':
+        logging.debug("playing song id {} from queue".format(cad.menu.highlightitem))
+        bluos.play(id=cad.menu.highlightitem)
+        cad.state.playqueue()
 
 
 def button4(event, bluos, cad):

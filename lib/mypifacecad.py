@@ -121,11 +121,20 @@ class MyPiFaceCAD(PiFaceCAD):
         return self.state.current_state_value
 
 
-    def nextstate(self):
-        # The menu state graph is just a simple circle with no branches.
-        # Therefore there is only one allowed transition from any state.
-        # Pick the first (and only) allowed transition and call that:
-        self.state.allowed_transitions[0]()
+    def nextmenustate(self):
+        """
+        By convention there is just one transition from one menu state
+        to the next menu state, and it's identifier ends with 'nextmenu'.
+        :return:
+        """
+        for transition in self.state.allowed_transitions:
+            ident = transition.identifier
+            if ident.endswith('nextmenu'):
+                logging.debug("State transition to next menu: {}".format(ident))
+                transition()
+                return True
+        return False
+
 
     def populatemenu(self, menulist):
         # todo: should we check if self.menu already is a Menu class object
