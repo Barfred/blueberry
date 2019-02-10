@@ -1,4 +1,4 @@
-import config.settings
+from config.settings import BLUOS_VOLUME_STEP
 import logging
 
 
@@ -13,13 +13,14 @@ def button_handler(event, bluos, cad):
         6: button6,
         7: button7,
     }
+    # TODO: skip event in case of double-fire (multiple events on the same
+    # button in a short time interval)
     logging.debug("button_handler debug pin_num={}".format(str(event.pin_num)))
     handlers.get(event.pin_num)(event, bluos, cad)
 
 
 def button0(event, bluos, cad):
     # This button cycles through UI states
-    # TODO: ignore duplicate events in very short time span on same switch due to poor switch HW
     cad.nextmenustate()
     state = cad.getstate()
     logging.debug("UI State is now: {}".format(state))
@@ -51,19 +52,17 @@ def button1(event, bluos, cad):
     if state == 'player':
         cad.lcdpopup("Previous track..")
         bluos.back()
-    elif state in ('presetradioselect', 'playlistselect', 'queueselect'):
+    elif state in ('radioselect', 'playlistselect', 'queueselect'):
         cad.menu.highlightprevious()
         cad.lcdwritemenu()
 
 
 def button2(event, bluos, cad):
     state = cad.getstate()
-
     if state == 'player':
         cad.lcdpopup("Next track..")
         bluos.skip()
-
-    elif state in ('presetradioselect', 'playlistselect', 'queueselect'):
+    elif state in ('radioselect', 'playlistselect', 'queueselect'):
         cad.menu.highlightnext()
         cad.lcdwritemenu()
 
@@ -75,27 +74,30 @@ def button3(event, bluos, cad):
         cad.lcdpopup("Next track..")
         bluos.skip()
 
-    elif state == 'presetradioselect':
+    elif state == 'radioselect':
         # Play the radiostation
         url = cad.menu.menuitems[cad.menu.highlightitem]['@URL']
         logging.debug("playing radiostation {} from url {}".format(cad.menu.menuitems[cad.menu.highlightitem]['@text'], url))
+        cad.updatetitles(title1="", title2="")
         bluos.play(url=url)
         cad.state.playradio()
 
     elif state == 'playlistselect':
         name = cad.menu.menuitems[cad.menu.highlightitem]['@text']
         logging.debug("playing playlist {}".format(name))
+        cad.updatetitles(title1="", title2="")
         bluos.queuePlaylist(name)
         cad.state.playplaylist()
 
     elif state == 'queueselect':
         logging.debug("playing song id {} from queue".format(cad.menu.highlightitem))
+        cad.updatetitles(title1="", title2="")
         bluos.play(id=cad.menu.highlightitem)
         cad.state.playqueue()
 
 
 def button4(event, bluos, cad):
-    logging.debug("You pressed: {}".format(str(event.pin_num)))
+    cad.lcdbacklight(action='toggle')
 
 
 def button5(event, bluos, cad):
@@ -113,14 +115,15 @@ def button6(event, bluos, cad):
     # Selector switch pushed to the left
     # Function: Volume down
     currentvolume = int(bluos.getStatus()['volume'])
-    newvolume = max(0, currentvolume - config.settings.BLUOS_VOLUME_STEP)
+    newvolume = max(0, currentvolume - BLUOS_VOLUME_STEP)
     bluos.volume(newvolume)
     logging.info("Volume decreased from {} to {}".format(currentvolume, newvolume))
+
 
 def button7(event, bluos, cad):
     # Selector switch is pushed to the right
     # Function: Volume up
     currentvolume = int(bluos.getStatus()['volume'])
-    newvolume = min(100, currentvolume + config.settings.BLUOS_VOLUME_STEP)
+    newvolume = min(100, currentvolume + BLUOS_VOLUME_STEP)
     bluos.volume(newvolume)
     logging.info("Volume increased from {} to {}".format(currentvolume, newvolume))
