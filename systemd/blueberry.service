@@ -1,0 +1,25 @@
+# Copy this file to /etc/systemd/system/blueberry.service
+# and reload systemd with:
+#   systemctl daemon-reload
+#
+# Start the service with:
+#   systemctl start blueberry
+
+# Enable the service to start at boot with:
+#   systemctl enable blueberry
+
+[Unit]
+Description=Blueberry controlle
+After=network.target
+
+[Service]
+ExecStart=/home/pi/blueberry/virtual_env/bin/python3 blueberry.py
+WorkingDirectory=/home/pi/blueberry
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+Environment=PYTHONPATH=./bluesound
+
+[Install]
+WantedBy=multi-user.target
